@@ -28,6 +28,13 @@ def handle_calculate_IK(req):
 		
         ### Your FK code here
         # Create symbols
+		q1, q1, q2, q3, q4, q5, q6, q7 = symbols('q1:8') #theta_i, angle rotation
+
+		d1, d1, d2, d3, d4, d5, d6, d7 = symbols('d1:8') #link off-sets
+
+		a0, a1, a2, a3, a4, a5, a6, a6 = symbols('a0:7') #link lenghts
+
+		alpha0, alpha1, alpha2, alpha3, alpha4, alpha5, alpha6 = symbols('alpha0:7') #Twist angles
 	#
 	#   
 	# Create Modified DH parameters
