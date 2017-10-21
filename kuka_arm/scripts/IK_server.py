@@ -38,9 +38,23 @@ def handle_calculate_IK(req):
 	#
 	#   
 	# Create Modified DH parameters
-	#
+	d02 = 0.75
+	d35 = 1.5
+	dg = 0.2305
+	a02 = 0.35
+	a23 = 1.25
+	a34 = -0.054
+    anp = pi/2
+    ann = - pi/2
 	#            
 	# Define Modified DH Transformation matrix
+	s = {alpha0: 0,   a0:  0,    d1:  d02, 
+		 alpha1: ann, a1:  a02,  d2:  0,   q2: ann,
+		 alpha2: 0,   a2:  a23,  d3:  0, 	 
+		 alpha3: ann, a3:  a34,  d4:  d35, 
+		 alpha4: anp, a4:  0,    d5:  0, 	 
+		 alpha5: ann, a5:  0,    d6:  0, 	 
+		 alpha6: 0,   a6:  0,    d7:  0,   q7: 0}
 	#
 	#
 	# Create individual transformation matrices
