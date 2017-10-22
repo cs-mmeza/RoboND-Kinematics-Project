@@ -107,12 +107,26 @@ def handle_calculate_IK(req):
 		T0_4 = simplify(T0_3 * T3_4) #base link to link 4
 		T0_5 = simplify(T0_4 * T4_5) #base link to link 5
 		T0_6 = simplify(T0_5 * T5_6) #base link to link 6
-		T0_G = simplify(T0_6 * T6_G) #base link to link G
+		T0_G = simplify(T0_6 * T6_G) ##base link to link G
 
 	#
 	#
-        ###
+    #   Correction needed to account of orientation difference between definition of gripper link
+    #   in URDF vs DH convertion
+        R_z = Matrix([[     cos(np.pi),     -sin(np.pi),    		  0,   0],
+        			  [     sin(np.pi),      cos(np.pi),    		  0,   0],
+        			  [              0, 	   	      0,    		  1,   0],
+        			  [              0, 		      0,    		  0,   1]])
 
+        R_y = Matrix([[  cos(-np.pi/2),               0,  sin(-np.pi/2),   0],
+        			  [              0,               1,    		  0,   0],
+        			  [ -sin(-np.pi/2),               0,  cos(-np.pi/2),   0],
+        			  [              0, 		      0,    		  0,   1]])
+
+        R_corr = simplify(R_z * R_y) #Total rotation
+
+        T_Total = simplify(T0_G * R_corr) #Total Homogeneous transform
+        
         # Initialize service response
         joint_trajectory_list = []
         for x in xrange(0, len(req.poses)):
