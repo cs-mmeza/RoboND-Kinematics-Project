@@ -102,7 +102,12 @@ def handle_calculate_IK(req):
 	#
 	#
 	# Extract rotation matrices from the transformation matrices
-	
+		T0_2 = simplify(T0_1 * T1_2) #base link to link 2
+		T0_3 = simplify(T0_2 * T2_3) #base link to link 3	
+		T0_4 = simplify(T0_3 * T3_4) #base link to link 4
+		T0_5 = simplify(T0_4 * T4_5) #base link to link 5
+		T0_6 = simplify(T0_5 * T5_6) #base link to link 6
+		T0_G = simplify(T0_6 * T6_G) #base link to link G
 
 	#
 	#
