@@ -49,56 +49,35 @@ def handle_calculate_IK(req):
 	#            
 	# Define Modified DH Transformation matrix
 		s = {alpha0: 0,   a0:  0,    d1:  d02, 
-		 	alpha1: ann, a1:  a02,  d2:  0,   q2: ann,
+		 	alpha1: ann, a1:  a02,  d2:  0,    q2: ann,
 		 	alpha2: 0,   a2:  a23,  d3:  0, 	 
 		 	alpha3: ann, a3:  a34,  d4:  d35, 
 		 	alpha4: anp, a4:  0,    d5:  0, 	 
 		 	alpha5: ann, a5:  0,    d6:  0, 	 
-		 	alpha6: 0,   a6:  0,    d7:  0,   q7: 0}
+		 	alpha6: 0,   a6:  0,    d7:  0,    q7: 0}
 	#
 	#
 	# Create individual transformation matrices
-		T0_1 = Matrix([[         cos(q1),            -sin(q1),            0,              a0],
-               	   [ sin(q1)*cos(alpha0), cos(q1)*cos(alpha0), -sin(alpha0), -sin(alpha0)*d1],
-               	   [ sin(q1)*sin(alpha0), cos(q1)*sin(alpha0),  cos(alpha0),  cos(alpha0)*d1],
-               	   [                   0,                   0,            0,               1]])
-		T0_1 = T0_1.subs(s)
+		def Ind_transform(q, alpha, d, a): #individual transform matrix
+			
+			T0_N = Matrix([[        cos(q),           -sin(q),           0,             a],
+            	   	   [ sin(q)*cos(alpha), cos(q)*cos(alpha), -sin(alpha), -sin(alpha)*d],
+               		   [ sin(q)*sin(alpha), cos(q)*sin(alpha),  cos(alpha),  cos(alpha)*d],
+               		   [                 0,                 0,           0,            1]])
+			T0_N = T0_N.subs(s)
 
-		T1_2 = Matrix([[         cos(q2),            -sin(q2),            0,              a1],
-               	   [ sin(q2)*cos(alpha1), cos(q2)*cos(alpha1), -sin(alpha1), -sin(alpha1)*d2],
-                   [ sin(q2)*sin(alpha1), cos(q2)*sin(alpha1),  cos(alpha1),  cos(alpha1)*d2],
-                   [                   0,                   0,            0,               1]])
-		T1_2 = T1_2.subs(s)
+			return T0_N
 
-		T2_3 = Matrix([[         cos(q3),            -sin(q3),            0,              a2],
-                   [ sin(q3)*cos(alpha2), cos(q3)*cos(alpha2), -sin(alpha2), -sin(alpha2)*d3],
-                   [ sin(q3)*sin(alpha2), cos(q3)*sin(alpha2),  cos(alpha2),  cos(alpha2)*d3],
-                   [                   0,                   0,            0,               1]])
-		T2_3 = T2_3.subs(s)
+		# individual transform for each link
+		T0_1 = Ind_transform(q1, alpha0, d1, a0)
+		T1_2 = Ind_transform(q2, alpha1, d2, a1)
+		T2_3 = Ind_transform(q3, alpha2, d3, a2)
+		T3_4 = Ind_transform(q4, alpha3, d4, a3)
+		T4_5 = Ind_transform(q5, alpha4, d5, a4)
+		T5_6 = Ind_transform(q6, alpha4, d6, a5)
+		T6_G = Ind_transform(q7, alpha6, d7, a6)
 
-		T3_4 = Matrix([[         cos(q4),            -sin(q4),            0,              a3],
-                   [ sin(q4)*cos(alpha3), cos(q4)*cos(alpha3), -sin(alpha3), -sin(alpha3)*d4],
-                   [ sin(q4)*sin(alpha3), cos(q4)*sin(alpha3),  cos(alpha3),  cos(alpha3)*d4],
-                   [                   0,                   0,            0,               1]])
-		T3_4 = T3_4.subs(s)
-
-		T4_5 = Matrix([[         cos(q5),            -sin(q5),            0,              a4],
-                   [ sin(q5)*cos(alpha4), cos(q5)*cos(alpha4), -sin(alpha4), -sin(alpha4)*d5],
-                   [ sin(q5)*sin(alpha4), cos(q5)*sin(alpha4),  cos(alpha4),  cos(alpha4)*d5],
-                   [                   0,                   0,            0,               1]])
-		T4_5 = T3_4.subs(s)
-	
-		T5_6 = Matrix([[         cos(q6),            -sin(q6),            0,              a5],
-                   [ sin(q6)*cos(alpha5), cos(q6)*cos(alpha5), -sin(alpha5), -sin(alpha5)*d6],
-                   [ sin(q6)*sin(alpha5), cos(q6)*sin(alpha5),  cos(alpha5),  cos(alpha5)*d6],
-                   [                   0,                   0,            0,               1]])
-		T5_6 = T3_4.subs(s)
-
-		T6_G = Matrix([[         cos(q7),            -sin(q7),            0,              a6],
-                   [ sin(q7)*cos(alpha6), cos(q7)*cos(alpha6), -sin(alpha6), -sin(alpha6)*d7],
-                   [ sin(q7)*sin(alpha6), cos(q7)*sin(alpha6),  cos(alpha6),  cos(alpha6)*d7],
-                   [                   0,                   0,            0,               1]])
-		T6_G = T3_4.subs(s)
+		
 	#
 	#
 	# Extract rotation matrices from the transformation matrices
