@@ -40,7 +40,7 @@ def handle_calculate_IK(req):
 	# Create Modified DH parameters
 		d02 = 0.75
 		d35 = 1.5
-		dg = 0.2305
+		dg = 0.303 #gripper link off-set
 		a02 = 0.35
 		a23 = 1.25
 		a34 = -0.054
@@ -48,13 +48,13 @@ def handle_calculate_IK(req):
     	ann = - pi/2
 	#            
 	# Define Modified DH Transformation matrix
-		s = {alpha0: 0,   a0:  0,    d1:  d02, 
-		 	alpha1: ann, a1:  a02,  d2:  0,    q2: ann,
-		 	alpha2: 0,   a2:  a23,  d3:  0, 	 
-		 	alpha3: ann, a3:  a34,  d4:  d35, 
-		 	alpha4: anp, a4:  0,    d5:  0, 	 
-		 	alpha5: ann, a5:  0,    d6:  0, 	 
-		 	alpha6: 0,   a6:  0,    d7:  0,    q7: 0}
+		dht = {alpha0: 0,   a0:  0,    d1:  d02, 
+		 	 alpha1: ann, a1:  a02,  d2:  0,    q2: ann,
+		 	 alpha2: 0,   a2:  a23,  d3:  0, 	 
+		 	 alpha3: ann, a3:  a34,  d4:  d35, 
+		 	 alpha4: anp, a4:  0,    d5:  0, 	 
+		 	 alpha5: ann, a5:  0,    d6:  0, 	 
+		 	 alpha6: 0,   a6:  0,    d7:  dg,    q7: 0}
 	#
 	#
 	# Create individual transformation matrices
@@ -68,53 +68,53 @@ def handle_calculate_IK(req):
 
 			return T0_N
 
-		# individual transform for each link
-		T0_1 = Ind_transform(q1, alpha0, d1, a0)
-		T1_2 = Ind_transform(q2, alpha1, d2, a1)
-		T2_3 = Ind_transform(q3, alpha2, d3, a2)
-		T3_4 = Ind_transform(q4, alpha3, d4, a3)
-		T4_5 = Ind_transform(q5, alpha4, d5, a4)
-		T5_6 = Ind_transform(q6, alpha4, d6, a5)
-		T6_G = Ind_transform(q7, alpha6, d7, a6)
-
-		
+		# Individual transform for each link
+		T0_1 = Ind_transform(q1, alpha0, d1, a0).subs(dht)
+		T1_2 = Ind_transform(q2, alpha1, d2, a1).subs(dht)
+		T2_3 = Ind_transform(q3, alpha2, d3, a2).subs(dht)
+		T3_4 = Ind_transform(q4, alpha3, d4, a3).subs(dht)
+		T4_5 = Ind_transform(q5, alpha4, d5, a4).subs(dht)
+		T5_6 = Ind_transform(q6, alpha4, d6, a5).subs(dht)
+		T6_G = Ind_transform(q7, alpha6, d7, a6).subs(dht)
 	#
 	#
-	# Extract rotation matrices from the transformation matrices
+		# Extract rotation matrices from the transformation matrices
 		T0_2 = simplify(T0_1 * T1_2) #base link to link 2
 		T0_3 = simplify(T0_2 * T2_3) #base link to link 3	
 		T0_4 = simplify(T0_3 * T3_4) #base link to link 4
 		T0_5 = simplify(T0_4 * T4_5) #base link to link 5
 		T0_6 = simplify(T0_5 * T5_6) #base link to link 6
-		T0_G = simplify(T0_6 * T6_G) ##base link to link G
+		T0_G = simplify(T0_6 * T6_G) ##base link to link G or end effector
 
-	#
-	#
-    #   Correction needed to account of orientation difference between definition of gripper link
-    #   in URDF vs DH convertion
-        R_z = Matrix([[     cos(np.pi),     -sin(np.pi),    		  0,   0],
-        			  [     sin(np.pi),      cos(np.pi),    		  0,   0],
-        			  [              0, 	   	      0,    		  1,   0],
-        			  [              0, 		      0,    		  0,   1]])
+		# Correction required on the end effector to get the real position from kr210.urdf.xacro
+		# Rotation on the z-axis by pi radiants or 180 grees
+		R_z = Matrix([[             cos(pi),            -sin(pi),            0,              0],
+           [                        sin(pi),            cos(pi),             0,              0],
+           [                        0,                  0,                   1,              0],
+           [                        0,                  0,                   0,              1]])
 
-        R_y = Matrix([[  cos(-np.pi/2),               0,  sin(-np.pi/2),   0],
-        			  [              0,               1,    		  0,   0],
-        			  [ -sin(-np.pi/2),               0,  cos(-np.pi/2),   0],
-        			  [              0, 		      0,    		  0,   1]])
+        # then rotate around y-axis by -pi/2 radiants or -90 degrees
+        R_y = Matrix([[             cos(-pi/2),         0,                   sin(-pi/2),     0],
+           [                        0,                  1,                   0,              0],
+           [                        -sin(-pi/2),        0,                   cos(-pi/2),     0],
+           [                        0,                  0,                   0,              1]])
 
-        R_corr = simplify(R_z * R_y) #Total rotation
+        #Calculate total correction factor of the urdf file on the end effector
+        R_corr = simplify(R_z * R_y)
 
-        T_Total = simplify(T0_G * R_corr) #Total Homogeneous transform
-        
+        #Calculate corrected transform from base to end effector
+        T_total = simplify(T0_G * R_corr)
+      
         # Initialize service response
         joint_trajectory_list = []
         for x in xrange(0, len(req.poses)):
-            # IK code starts here
+        ### IK code starts here
             joint_trajectory_point = JointTrajectoryPoint()
 
 	    # Extract end-effector position and orientation from request
 	    # px,py,pz = end-effector position
 	    # roll, pitch, yaw = end-effector orientation
+
             px = req.poses[x].position.x
             py = req.poses[x].position.y
             pz = req.poses[x].position.z
@@ -122,9 +122,47 @@ def handle_calculate_IK(req):
             (roll, pitch, yaw) = tf.transformations.euler_from_quaternion(
                 [req.poses[x].orientation.x, req.poses[x].orientation.y,
                     req.poses[x].orientation.z, req.poses[x].orientation.w])
-     
-            ### Your IK code here 
-	    # Compensate for rotation discrepancy between DH parameters and Gazebo
+
+            # Construct end efector base on yaw, pich and roll
+            Rw, Pt, Yw = symbols('Rw Pt Yw')
+
+        	R_roll =  Matrix([[ 	   1,        0,     	  0],
+                      	  	  [        0,  cos(Rw),    -sin(Rw)],
+                      	  	  [        0,  sin(Rw),  	cos(Rw)]]) #Roll
+
+        	R_pitch = Matrix([[  cos(Pt),        0,  	sin(Pt)],
+                      	  	  [        0,        1,           0],
+                      	  	  [ -sin(Pt),        0,  	cos(Pt)]]) #Pitch
+
+        	R_yaw =   Matrix([[ cos(Yw), -sin(Yw),           0],
+                      	  	  [ sin(Yw),  cos(Yw),           0],
+                      	  	  [   	  0,        0,           1]])  #Yaw
+
+        	## Extract end effector rotation matrices
+        	R0_G = simplify(R_yaw * R_pitch * R_roll)
+        	R0_G = simplify(R0_G * R_corr[0:3, 0:3])
+        	R0_G = R0_G.subs({Rw: roll ,Pt: pitch, Yw: yaw})
+
+        	# End efector current position
+        	EE = Matrix[[px],
+        				[py],
+        				[pz]]	
+			
+			# From the form to calculate the wrist center: W = p - (d6 + l) * n
+        	WC = EE - dg * R0_G[:,2]
+
+        	
+
+            # Populate response for the IK request
+            # In the next line replace theta1,theta2...,theta6 by your joint angle variables
+            joint_trajectory_point.positions = [theta1, theta2, theta3, theta4, theta5, theta6]
+            joint_trajectory_list.append(joint_trajectory_point)
+
+        
+
+        rospy.loginfo("length of Joint Trajectory List: %s" % len(joint_trajectory_list))
+        return CalculateIKResponse(joint_trajectory_list)
+
 	    #
 	    #
 	    # Calculate joint angles using Geometric IK method
