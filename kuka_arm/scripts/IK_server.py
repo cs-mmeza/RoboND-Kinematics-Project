@@ -49,12 +49,12 @@ def handle_calculate_IK(req):
 	#            
 	# Define Modified DH Transformation matrix
 		dht = {alpha0: 0,   a0:  0,    d1:  d02, 
-		 	 alpha1: ann, a1:  a02,  d2:  0,    q2: ann,
-		 	 alpha2: 0,   a2:  a23,  d3:  0, 	 
-		 	 alpha3: ann, a3:  a34,  d4:  d35, 
-		 	 alpha4: anp, a4:  0,    d5:  0, 	 
-		 	 alpha5: ann, a5:  0,    d6:  0, 	 
-		 	 alpha6: 0,   a6:  0,    d7:  dg,    q7: 0}
+		 	  alpha1: ann, a1:  a02,  d2:  0,    q2: ann,
+		 	  alpha2: 0,   a2:  a23,  d3:  0, 	 
+		 	  alpha3: ann, a3:  a34,  d4:  d35, 
+		 	  alpha4: anp, a4:  0,    d5:  0, 	 
+		 	  alpha5: ann, a5:  0,    d6:  0, 	 
+		 	  alpha6: 0,   a6:  0,    d7:  dg,    q7: 0}
 	#
 	#
 	# Create individual transformation matrices
@@ -150,6 +150,30 @@ def handle_calculate_IK(req):
 			
 			# From the form to calculate the wrist center: W = p - (d6 + l) * n
         	WC = EE - dg * R0_G[:,2]
+        	
+        	############# Calculate Theta 1, 2 and 3 #############
+        	#
+        	theta1 = atan2(WC[1],WC[0])
+
+        	# translation coordinates obtained by using rviz : rosrun tf tf_echo [reference frame] [target frame]
+        	l2_3  = [0.000, 0.000, 1.250] # link 2 to link 3
+        	l3_5 = [1.500, 0.000, -0.054] # link 3 to link 5 or wrist center
+        	l0_5 = [1.850, 0.000, 1.946] # base kink to wrist center
+      
+        	#calculate side b with cosin law
+    		a = l2_3[2]
+    		b = sqrt(pow((sqrt(WC[0] * WC[0] + WC[1] * WC[1]) - 0.35),2) + pow((WC[2] - 0.75),2)) 
+    		c = l3_5[0]
+
+    		#calculate each angle
+    		angle_a = acos((side_b * side_b + side_c * side_c - side_a * side_a) / (2 * side_b * side_c))
+    		angle_b = acos((side_a * side_a + side_c * side_c - side_b * side_b) / (2 * side_a * side_c))
+    		angle_c = acos((side_a * side_a + side_b * side_b - side_c * side_c) / (2 * side_a * side_b))
+
+    		#caclulate theta 2
+    		theta2 = pi / 2 - angle_a - atan2(WC[2] - 0.75, sqrt(WC[0] * WC[0] + WC[1] * WC[1]) - 0.35)
+    		#caclulate theta 3
+    		theta3 = pi / 2 - (angle_b -0.036)
 
         	
 
