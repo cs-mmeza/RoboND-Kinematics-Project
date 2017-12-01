@@ -28,11 +28,11 @@ def handle_calculate_IK(req):
 
         ### Your FK code here
         # Create symbols
-		q1, q1, q2, q3, q4, q5, q6, q7 = symbols('q1:8') #theta_i, angle rotation
+		q1, q2, q3, q4, q5, q6, q7 = symbols('q1:8') #theta_i, angle rotation
 
-		d1, d1, d2, d3, d4, d5, d6, d7 = symbols('d1:8') #link off-sets
+		d1, d2, d3, d4, d5, d6, d7 = symbols('d1:8') #link off-sets
 
-		a0, a1, a2, a3, a4, a5, a6, a6 = symbols('a0:7') #link lenghts
+		a0, a1, a2, a3, a4, a5, a6= symbols('a0:7') #link lenghts
 
 		alpha0, alpha1, alpha2, alpha3, alpha4, alpha5, alpha6 = symbols('alpha0:7') #Twist angles
 	#
@@ -48,13 +48,13 @@ def handle_calculate_IK(req):
 		ann = - pi/2
 	#
 	# Define Modified DH Transformation matrix
-		dht = {alpha0: 0,   a0:  0,    d1:  d02,
-		 	  alpha1: ann, a1:  a02,  d2:  0,    q2: ann,
-		 	  alpha2: 0,   a2:  a23,  d3:  0,
-		 	  alpha3: ann, a3:  a34,  d4:  d35,
-		 	  alpha4: anp, a4:  0,    d5:  0,
-		 	  alpha5: ann, a5:  0,    d6:  0,
-		 	  alpha6: 0,   a6:  0,    d7:  dg,    q7: 0}
+		dht = {alpha0: 	 0,   a0:  	 0,    d1:  d02,	q1: 	  q1,
+		 	   alpha1: ann,   a1:  a02,    d2:    0,    q2: ann + q2,
+		 	   alpha2: 	 0,   a2:  a23,    d3:    0,	q3:		  q3,
+		 	   alpha3: ann,   a3:  a34,    d4:  d35,	q4:		  q4,
+		 	   alpha4: anp,   a4:  	 0,    d5:    0,	q5: 	  q5,
+		 	   alpha5: ann,   a5:  	 0,    d6:    0,	q6: 	  q6,
+		 	   alpha6: 	 0,   a6:  	 0,    d7:   dg,    q7:  	   0}
 	#
 	#
 	# Create individual transformation matrices
@@ -64,7 +64,6 @@ def handle_calculate_IK(req):
             	   	   [ sin(q)*cos(alpha), cos(q)*cos(alpha), -sin(alpha), -sin(alpha)*d],
                		   [ sin(q)*sin(alpha), cos(q)*sin(alpha),  cos(alpha),  cos(alpha)*d],
                		   [                 0,                 0,           0,            1]])
-			T0_N = T0_N.subs(s)
 
 			return T0_N
 
@@ -74,10 +73,10 @@ def handle_calculate_IK(req):
 		T2_3 = Ind_transform(q3, alpha2, d3, a2).subs(dht)
 		T3_4 = Ind_transform(q4, alpha3, d4, a3).subs(dht)
 		T4_5 = Ind_transform(q5, alpha4, d5, a4).subs(dht)
-		T5_6 = Ind_transform(q6, alpha4, d6, a5).subs(dht)
+		T5_6 = Ind_transform(q6, alpha5, d6, a5).subs(dht)
 		T6_G = Ind_transform(q7, alpha6, d7, a6).subs(dht)
-	#
-	#
+
+
 		# Extract rotation matrices from the transformation matrices
 		T0_2 = simplify(T0_1 * T1_2) #base link to link 2
 		T0_3 = simplify(T0_2 * T2_3) #base link to link 3
@@ -85,6 +84,11 @@ def handle_calculate_IK(req):
 		T0_5 = simplify(T0_4 * T4_5) #base link to link 5
 		T0_6 = simplify(T0_5 * T5_6) #base link to link 6
 		T0_G = simplify(T0_6 * T6_G) ##base link to link G or end effector
+	#
+	#
+		# Extract rotation matrices from the transformation matrices
+
+		T0_G = T0_1 * T1_2 * T2_3 * T3_4 * T4_5 * T5_6 * T6_G ##base link to link G or end effector
 
 		# Correction required on the end effector to get the real position from kr210.urdf.xacro
 		# Rotation on the z-axis by pi radiants or 180 grees
@@ -101,9 +105,6 @@ def handle_calculate_IK(req):
 
 		#Calculate total correction factor of the urdf file on the end effector
 		R_corr = simplify(R_z * R_y)
-
-		#Calculate corrected transform from base to end effector
-		T_total = simplify(T0_G * R_corr)
 
 		# Initialize service response
 		joint_trajectory_list = []
@@ -144,9 +145,7 @@ def handle_calculate_IK(req):
         	R0_G = R0_G.subs({Rw: roll ,Pt: pitch, Yw: yaw})
 
         	# End efector current position
-        	EE = Matrix[[px],
-        				[py],
-        				[pz]]
+        	EE = Matrix([[px], [py], [pz]])
 
 		# From the form to calculate the wrist center: W = p - (d6 + l) * n
         	WC = EE - dg * R0_G[:,2]
@@ -155,15 +154,11 @@ def handle_calculate_IK(req):
         	#
         	theta1 = atan2(WC[1],WC[0])
 
-        	# translation coordinates obtained by using rviz : rosrun tf tf_echo [reference frame] [target frame]
-        	l2_3  = [0.000, 0.000, 1.250] # link 2 to link 3
-        	l3_5 = [1.500, 0.000, -0.054] # link 3 to link 5 or wrist center
-        	l0_5 = [1.850, 0.000, 1.946] # base kink to wrist center
-
         	#calculate side b with cosin law
-    		a = l2_3[2]
-    		b = sqrt(pow((sqrt(WC[0] * WC[0] + WC[1] * WC[1]) - 0.35),2) + pow((WC[2] - 0.75),2))
-    		c = l3_5[0]
+        	#														O3_O4			     O4_WC		
+    		side_a = 1.501 # space between O2 and WC = (sqrt(pow(0.96) + pow(0.054))) +   0.54 
+    		side_b = sqrt(pow((sqrt(WC[0] * WC[0] + WC[1] * WC[1]) - 0.35),2) + pow((WC[2] - 0.75),2))
+    		side_c = 1.25 # O2_O3
 
     		#calculate each angle
     		angle_a = acos((side_b * side_b + side_c * side_c - side_a * side_a) / (2 * side_b * side_c))
@@ -173,10 +168,10 @@ def handle_calculate_IK(req):
     		#caclulate theta 2
     		theta2 = pi / 2 - angle_a - atan2(WC[2] - 0.75, sqrt(WC[0] * WC[0] + WC[1] * WC[1]) - 0.35)
     		#caclulate theta 3
-    		theta3 = pi / 2 - (angle_b -0.036)
+    		theta3 = pi / 2 - (angle_b + 0.036)
 
     		# calculate rotation matrix from link o to 3 using theta 1, 2 and 3
-    		R0_3 = T0_3[0:3, 0:3] #used to calculate Wrist center
+    		R0_3 = T0_3[0:3, 0:3] #extracting rotation propertis
     		R0_3 = R0_3.evalf(subs={q1: theta1, q2: theta2, q3: theta3})
 
     		R3_6 = R0_3.inv("LU") * R0_G # Rotation matrix from link 3 to end efecotr
