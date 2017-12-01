@@ -1,29 +1,32 @@
+## Robot Arm Kinematics Project 
+-----------------------------------------
 [//]: # (Image and equiation References)
-
 [image1]: ./misc_images/misc1.png
 [image2]: ./misc_images/misc3.png
 [image3]: ./misc_images/misc2.png
-[image4]: ./misc_image/gazevo_robo_arm.jpg
-[image5]: ./misc_image/arviz_robo_arm.png
+[image4]: ./misc_images/gazebo_robo_arm.jpg
+[image5]: ./misc_images/arbiz_robo_arm.png
 [image6]: ./misc_image/dh_parameters.jpg
-[equ1]: ./misc_image/transform-single.png
-[equ2]: ./misc_image/transform-comb.png
-[equ3]: ./misc_image/angle_d.png
-[equ4]: ./misc_image/angle_e.png
-[equ5]: ./misc_image/R-calc.png
-[equ6]: ./misc_image/R_3_6.png
-[equ7]: ./misc_image/R_3_6_simpl.png
-[equ8]: ./misc_image/R_rpy.png
-[schematic1] ./misc_image/Theta1.png
-[schematic2] ./misc_image/Theta2-3.png
-[schematic3] ./misc_image/Theta3.png
+[equ1]: ./misc_images/transform-single.png
+[equ2]: ./misc_images/transform-comb.png
+[equ3]: ./misc_images/angle_d.png
+[equ4]: ./misc_images/angle_e.png
+[equ5]: ./misc_images/R-calc.png
+[equ6]: ./misc_images/R_3_6.png
+[equ7]: ./misc_images/R_3_6_simpl.png
+[equ8]: ./misc_images/R_rpy.png
+[schematic1]: ./misc_images/Theta1.png
+[schematic2]: ./misc_images/Theta2-3.png
+[schematic3]: ./misc_images/Theta3.png
 
-
-## Robot Kinematics Project 
 
 ##### *Robotic Arm / Kinematics Pick & Place*
 
-![alt_text][image3]![alt_text][image2]
+![gazevo][image4]
+
+![image3][image3]
+
+![rviz environment][image5]
 ###### Gazebo/rviz simulation of a robot arm,  __kuka kr210__.
 
 ###### This project is part of a program for Udacity students, on the Robotics Nanodegree Program. More information on How to set up the project in the last section of this document.
@@ -31,7 +34,7 @@
 
 ### Forward Kinematics
  
-Before We start coding any instruction to move the robot arm. Is necessary to calculate the rotation and translation to move the robot arm. This information can be found in the manufacturer's manual of the robot arm, but for this simulation, the coordinates needed are found in [kr210.urfd.xacro](https://github.com/csilver2/RoboND-Kinematics-Project/tree/master/kuka_arm/urdf)
+Before We start coding any instruction to move our robot arm. Is necessary to calculate the rotation and translation to move it. This information can be found in the manufacturer's manual of the robot arm, but for this simulation, the coordinates needed are found in [kr210.urfd.xacro](https://github.com/csilver2/RoboND-Kinematics-Project/tree/master/kuka_arm/urdf)
 
 Once all the 3D coordinates for each link are found, we can calculate the Forward Kinematics, which is a procedure that uses mathematics to locate our end effector.
 
@@ -72,12 +75,14 @@ Using [equation 1] we can calculate the rotation and translation between each jo
 ### Inverse Kinematics
 
 Once We know the end effector position, our objective is to calculate the angles for each join. This procedure is called inverse kinematics. Using the diagram [schematic1] we can have a better idea on how to find the angles by using the cosine law.
+
 ![robo arm joins and angles schematic][schematic1]
 
-Steps to complete Inverse Kinematics
-Calculating theta 1, 2, and 3.
-Calculation rotation matrix from link 0 to link 3
-Calculating thetha 4, 5, and 6.
+
+__Steps to complete Inverse Kinematics__
+1.__Calculate theta 1, 2, and 3.__
+2.__Calculate rotation matrix from link 0 to link 3__
+3.__Calculate thetha 4, 5, and 6__.
 
 #### 1.  Calculating Theta 1, 2, and 3
 The reference frame O4, O5, and O6 intersect at the same coordinate. So we choose a frame as Wrist Center (WC), which is a method that simplifies the mathematic calculation in inverse kinematics named **closed-form** , which then allow us to solve the angles θ1 to θ3 using cosine law. 
@@ -93,19 +98,28 @@ the diagram below shows the side view of the kuka arm, and the mothod to calcula
 ![robo arm joins and angles schematic][schematic2]
 
 θ2 is the angular distance between O2 and its position in the Z2 axis, thus it can be calculated finding the angle a and angle d once we have these angles we substract these values from the  90 grades angle, and the result is the theta angle.
-
+```python
+#			    ---------------- angle_d ------------------------------------
+theta2 = pi / 2 - angle_a - atan2(WC[2] - 0.75, sqrt(WC[0] * WC[0] + WC[1] * WC[1]) - 0.35)
+```
 The angle d can be calculated taking WC and O2 triangle then apliying the next equation:
 ![angle d equation][equ3]
 
 Similar to θ2 we can calculate θ3 by subtract from the 90 degrees angle, the angle b and angle e.
 ![robo arm joins and angles schematic][schematic3]
 
+```python
+#caclulate theta 3
+#			    angle_e
+theta3 = pi / 2 - (angle_b + 0.036)
+```
+
 angle e can be calculated with the followed equation:
 ![angle e quation][equ4]
 
 #### 2. Calculating rotation matrix and theta 4 to 6
 Finally to solve the inverse orientation problem we need to find **θ4**, **θ5**, and **θ6**, by using the resultan rotation:
-[equ5]: ./misc_image/R-calc.png
+![equ5][equ5]
 
 We then analyze the left and right hand sides of the equation above independently and solve for **θ4**, **θ5**, and **θ6**.
 
