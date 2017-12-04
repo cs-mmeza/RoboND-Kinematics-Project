@@ -45,8 +45,7 @@ The URFL file contains useful references about the coordinates of our robot arm,
     <origin xyz="0 0 0.33" rpy="0 0 0"/>
     <parent link="base_link"/>
     <child link="link_1"/>
-    <axis xyz="0 0 1"/> 
-    ```
+    <axis xyz="0 0 1"/>  ```
 
 Once all the 3D coordinates for each link are found, we can calculate the Forward Kinematics, which is a procedure that uses mathematics to locate our end effector. But, First, we need to change date taken from the URL accordingly to the Denavit-Hartenberg method.
 
