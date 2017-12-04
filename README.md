@@ -6,7 +6,7 @@
 [image3]: ./misc_images/misc2.png
 [image4]: ./misc_images/gazebo_robo_arm.jpg
 [image5]: ./misc_images/arbiz_robo_arm.png
-[image6]: ./misc_image/dh_parameters.jpg
+[image6]: ./misc_images/dh_parameters.png
 [equ1]: ./misc_images/transform-single.png
 [equ2]: ./misc_images/transform-comb.png
 [equ3]: ./misc_images/angle_d.png
@@ -34,18 +34,30 @@
 
 ### Forward Kinematics
  
-Before We start coding any instruction to move our robot arm. Is necessary to calculate the rotation and translation to move it. This information can be found in the manufacturer's manual of the robot arm, but for this simulation, the coordinates needed are found in [kr210.urfd.xacro](https://github.com/csilver2/RoboND-Kinematics-Project/tree/master/kuka_arm/urdf)
+Before We start coding any instruction to move our robot arm. It is necessary to calculate the rotation and translation necessary to do it.
 
-Once all the 3D coordinates for each link are found, we can calculate the Forward Kinematics, which is a procedure that uses mathematics to locate our end effector.
+First, we need to know our robot better, separating the robot arm by joins and links, considering the distance between each join. We also, need to divide the arm into frames that allow us to make the calculation easier. normally you can find this information in the manufacturer's manual. but, In this case, we are going to be looking in our [kr210.urfd.xacro](https://github.com/csilver2/RoboND-Kinematics-Project/tree/master/kuka_arm/urdf) File to get this information.
+
+The URFL file contains useful references about the coordinates of our robot arm,  in the code below you can see an example of the join 1 with 3D coordinates referenced to the base join or join 0:
+
+```python
+<joint name="joint_1" type="revolute">
+    <origin xyz="0 0 0.33" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="link_1"/>
+    <axis xyz="0 0 1"/> 
+    ```
+
+Once all the 3D coordinates for each link are found, we can calculate the Forward Kinematics, which is a procedure that uses mathematics to locate our end effector. But, First, we need to change date taken from the URL accordingly to the Denavit-Hartenberg method.
 
 We can define the steps to complete forward Kinematics in the following order.
-1. __Define the DH parameter table__
+1. __Define the DH diagram and parameter table__
 2. __Create individual transform matrices__
 3. __Extract rotation matrix for EE__
 
 #### 1.  Denavit-Hartenberg (DH) Parameters
 
-With this method, we only require four methods to calculate forward kinematics and inverse kinematics.
+Once all the 3D coordinates for each link are found, we can calculate the Forward Kinematics, which is a procedure that uses mathematics to locate our end effector.
 
 ![DH parameters diagram][image6]
 
