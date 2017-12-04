@@ -24,8 +24,6 @@
 
 ![gazevo][image4]
 
-![image3][image3]
-
 ![rviz environment][image5]
 ###### Gazebo/rviz simulation of a robot arm,  __kuka kr210__.
 
@@ -73,16 +71,70 @@ DH parameters
 |    6|      	      -π/2 |      0 |      0 |      	      θ6 |
 |   EE|                  0 |      0 |  0.303 |                 0 |
 
-#### 2. Homogeneus transform matrix combination
+###### Code implementation:
 
+```python
+dht = {alpha0: 	 0,   a0:  	 0,    d1:  d02,	q1: 	  q1,
+       alpha1: ann,   a1:  a02,        d2:    0,        q2: ann + q2,
+       alpha2: 	 0,   a2:  a23,        d3:    0,	q3:	  q3,
+       alpha3: ann,   a3:  a34,        d4:  d35,	q4:       q4,
+       alpha4: anp,   a4:  	 0,    d5:    0,	q5: 	  q5,
+       alpha5: ann,   a5:  	 0,    d6:    0,	q6: 	  q6,
+       alpha6: 	 0,   a6:  	 0,    d7:   dg,        q7:  	   0}
+```
+
+#### 2. Homogeneus transform matrix 
+
+With the DH parameters, we can calculate the individual homogeneous transform matrices for each joint.
+
+you can see the matrix used for each homogeneous transform on the image below.
 ![convine transform matrices][equ1]
+
+###### Code implementation:
+
+```python
+def Ind_transform(q, alpha, d, a): #individual transform matrix
+
+			T0_N = Matrix([[        cos(q),           -sin(q),           0,     a],
+            	   	   [ sin(q)*cos(alpha), cos(q)*cos(alpha), -sin(alpha), -sin(alpha)*d],
+               		   [ sin(q)*sin(alpha), cos(q)*sin(alpha),  cos(alpha),  cos(alpha)*d],
+               		   [                 0,                 0,           0,            1]])
+
+			return T0_N
+
+		# Individual transform for each link
+		T0_1 = Ind_transform(q1, alpha0, d1, a0).subs(dht)
+		T1_2 = Ind_transform(q2, alpha1, d2, a1).subs(dht)
+		T2_3 = Ind_transform(q3, alpha2, d3, a2).subs(dht)
+		T3_4 = Ind_transform(q4, alpha3, d4, a3).subs(dht)
+		T4_5 = Ind_transform(q5, alpha4, d5, a4).subs(dht)
+		T5_6 = Ind_transform(q6, alpha5, d6, a5).subs(dht)
+		T6_G = Ind_transform(q7, alpha6, d7, a6).subs(dht)
+```
+
+Once we have each homogeneous transform we can calculate the total homogeneous transform for our kuka arm by multiplying each transform together.
+![homogeneus transform multiplication][equ2]
 
 #### 3. Extract rotation matrix for EE.
 
-Using [equation 1] we can calculate the rotation and translation between each join. To calculate a total homogenous transform for the robot and know the location of the robot we calculate the transform matrix for each join and then we calculate the dot product for all the transforms. For a simplified view check the equation below.
+There is an orientation different from the gripper on the URFD file and the DH convention frames. to compensate this we can add a rotation to the final homogeneous transform : 180 Z axis, -90 Y Axis.
 
-![homogeneus transform multiplication][equ2]
+###### Code implementation.
+```python
+R_z = Matrix([[             cos(pi),            -sin(pi),            0,              0],
+           [                        sin(pi),            cos(pi),             0,              0],
+           [                        0,                  0,                   1,              0],
+           [                        0,                  0,                   0,              1]])
 
+		# then rotate around y-axis by -pi/2 radiants or -90 degrees
+		R_y = Matrix([[             cos(-pi/2),         0,                   sin(-pi/2),     0],
+           [                        0,                  1,                   0,              0],
+           [                        -sin(-pi/2),        0,                   cos(-pi/2),     0],
+           [                        0,                  0,                   0,              1]])
+
+		#Calculate total correction factor of the urdf file on the end effector
+		R_corr = simplify(R_z * R_y)
+```
 
 ### Inverse Kinematics
 
