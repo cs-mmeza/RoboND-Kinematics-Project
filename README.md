@@ -7,7 +7,7 @@
 [image4]: ./misc_images/gazebo_robo_arm.jpg
 [image5]: ./misc_images/arbiz_robo_arm.png
 [image6]: ./misc_images/dh_parameters.png
-[image7]: ./misc_images/dh_calculation.png
+[image7]: ./misc_images/dh_calculation.jpg
 [equ1]: ./misc_images/transform-single.png
 [equ2]: ./misc_images/transform-comb.png
 [equ3]: ./misc_images/angle_d.png
