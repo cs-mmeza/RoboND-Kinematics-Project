@@ -7,6 +7,7 @@
 [image4]: ./misc_images/gazebo_robo_arm.jpg
 [image5]: ./misc_images/arbiz_robo_arm.png
 [image6]: ./misc_images/dh_parameters.png
+[image7]: ./misc_images/dh_calculation.png
 [equ1]: ./misc_images/transform-single.png
 [equ2]: ./misc_images/transform-comb.png
 [equ3]: ./misc_images/angle_d.png
@@ -34,9 +35,9 @@
  
 Before We start coding any instruction to move our robot arm. It is necessary to calculate the rotation and translation necessary to do it.
 
-First, we need to know our robot better, separating the robot arm by joins and links, considering the distance between each join. We also, need to divide the arm into frames that allow us to make the calculation easier. normally you can find this information in the manufacturer's manual. but, In this case, we are going to be looking in our [kr210.urfd.xacro](https://github.com/csilver2/RoboND-Kinematics-Project/tree/master/kuka_arm/urdf) File to get this information.
+First, we need to know our robot better, separating the robot arm by joints and links, considering the distance between each joint. We also, need to divide the arm into frames that allow us to make the calculation easier. normally you can find this information in the manufacturer's manual. but, In this case, we are going to be looking in our [kr210.urfd.xacro](https://github.com/csilver2/RoboND-Kinematics-Project/tree/master/kuka_arm/urdf) File to get this information.
 
-The URFL file contains useful references about the coordinates of our robot arm,  in the code below you can see an example of the join 1 with 3D coordinates referenced to the base join or join 0:
+The URFL file contains useful references about the coordinates of our robot arm,  in the code below you can see an example of the joint 1 with 3D coordinates referenced to the base joint or joint 0:
 
 ```python
 <joint name="joint_1" type="revolute">
@@ -56,7 +57,7 @@ We can define the steps to complete forward Kinematics in the following order.
 #### 1.  Denavit-Hartenberg (DH) Parameters
 
 Once all the 3D coordinates for each link are found, we can calculate the Forward Kinematics, which is a procedure that uses mathematics to locate our end effector.
-
+![DH_parameters_calculation][image7]
 ![DH parameters diagram][image6]
 
 DH parameters
@@ -138,9 +139,9 @@ R_z = Matrix([[             cos(pi),            -sin(pi),            0,         
 
 ### Inverse Kinematics
 
-Once We know the end effector position, our objective is to calculate the angles for each join. This procedure is called inverse kinematics. Using the diagram [schematic1] we can have a better idea on how to find the angles by using the cosine law.
+Once We know the end effector position, our objective is to calculate the angles for each joint. This procedure is called inverse kinematics. Using the diagram [schematic1] we can have a better idea on how to find the angles by using the cosine law.
 
-![robo arm joins and angles schematic][schematic1]
+![robo arm joints and angles schematic][schematic1]
 
 
 __Steps to complete Inverse Kinematics__
@@ -155,11 +156,11 @@ The reference frame O4, O5, and O6 intersect at the same coordinate. So we choos
 Here is a diagram that shows the top view of the kuka arm with points that indicate each frame.
 
 We can get **θ1** by calculathing by rotating O1 about its Z-axis. 
-![robo arm joins and angles schematic][schematic1]
+![robo arm joints and angles schematic][schematic1]
 
 #### 1.2. Theta 2-3(**θ2**, **θ3**)
 the diagram below shows the side view of the kuka arm, and the mothod to calculate θ2 to θ3 with cosine law:
-![robo arm joins and angles schematic][schematic2]
+![robo arm joints and angles schematic][schematic2]
 
 θ2 is the angular distance between O2 and its position in the Z2 axis, thus it can be calculated finding the angle a and angle d once we have these angles we substract these values from the  90 grades angle, and the result is the theta angle.
 ```python
@@ -170,7 +171,7 @@ The angle d can be calculated taking WC and O2 triangle then apliying the next e
 ![angle d equation][equ3]
 
 Similar to θ2 we can calculate θ3 by subtract from the 90 degrees angle, the angle b and angle e.
-![robo arm joins and angles schematic][schematic3]
+![robo arm joints and angles schematic][schematic3]
 
 ```python
 #caclulate theta 3
@@ -183,13 +184,38 @@ angle e can be calculated with the followed equation:
 
 #### 2. Calculating rotation matrix and theta 4 to 6
 Finally to solve the inverse orientation problem we need to find **θ4**, **θ5**, and **θ6**, by using the resultan rotation:
-![equ5][equ5]
+![equ5][equ5]  .
 
-We then analyze the left and right hand sides of the equation above independently and solve for **θ4**, **θ5**, and **θ6**.
+Theta 4, 5 and 6 are the Euler Angles of the rotation R3_6. Thus our focus now is to calculate the rotation in that section.
 
-We know that R0_6 is the overall (roll, pitch, yaw) ratation between the base link and the end effector link so we uset to calculate R_3_6
+```python
+# calculate rotation matrix from link o to 3 using theta 1, 2 and 3
+R0_3 = T0_3[0:3, 0:3] #extracting rotation propertis
+R0_3 = R0_3.evalf(subs={q1: theta1, q2: theta2, q3: theta3})
+```
 
-Comparing LHS (Left Hand Side of the equation) with RHS (Right Hand Side of the equation) will result in equations for joint 4, 5, and 6.
+The matrix R3_6 is determined by decomposing the overall rotation matrix R0_6 = R0_3 * R3_6. Multiplying both sides by the inverse rotation R3_0 = inverse(R0_3) from the left gives:
+```python
+R3_6 = R0_3.inv("LU") * R0_G # Rotation matrix from link 3 to end effector
+```
+
+Now we can calculate theta 4,5, and 6 by using the Euler angles for R3_6 as follows.
+
+theta4 = atan2( r32, r33),
+
+theta6 = atan2( r21, r11),
+
+theta5 = atan2(-r31, sqrt(r11**2 + r21**2)).
+
+```python
+theta4 = atan2(R3_6[2,2], -R3_6[0,2])
+theta5 = atan2(sqrt(R3_6[0,2]*R3_6[0,2] + R3_6[2,2]*R3_6[2,2]), R3_6[1,2])
+theta6 = atan2(-R3_6[1,1], R3_6[1,0])
+```
+#### Results
+
+And finally, it seems that the robot is picking and placing the samples. the Kuka arm did a good job in the simulation so far, but sometimes it pushes the samples instead of grabbing them. that means there is a lot of improvement that can be done for the kinematics calculations on this project.
+
 
 
 ################################################################
