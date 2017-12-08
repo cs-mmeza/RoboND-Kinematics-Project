@@ -8,8 +8,8 @@
 [image5]: ./misc_images/arbiz_robo_arm.png
 [image6]: ./misc_images/dh_parameters.png
 [image7]: ./misc_images/dh_calculation.jpg
-[Matrix1]: ./misc_images/Rotation_axis.jpg
-[Matrix2]: ./misc_images/Individual_transform_matrices.jpg
+[Matrix1]: ./misc_images/Rotation_axis.JPG
+[Matrix2]: ./misc_images/Individual_transform_matrices.JPG
 [equ1]: ./misc_images/transform-single.png
 [equ2]: ./misc_images/transform-comb.png
 [equ3]: ./misc_images/angle_d.png
@@ -18,7 +18,7 @@
 [equ6]: ./misc_images/R_3_6.png
 [equ7]: ./misc_images/R_3_6_simpl.png
 [equ8]: ./misc_images/R_rpy.png
-[equ9]: ./misc_images/Individual_transform_form.jpg
+[equ9]: ./misc_images/Individual_transform_form.JPG
 [schematic1]: ./misc_images/Theta1.png
 [schematic2]: ./misc_images/Theta2-3.png
 [schematic3]: ./misc_images/Theta3.png
