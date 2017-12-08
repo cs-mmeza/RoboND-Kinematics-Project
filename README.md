@@ -8,6 +8,8 @@
 [image5]: ./misc_images/arbiz_robo_arm.png
 [image6]: ./misc_images/dh_parameters.png
 [image7]: ./misc_images/dh_calculation.jpg
+[Matrix1]: ./misc_images/Rotation_axis.jpg
+[Matrix2]: ./misc_images/Individual_transform_matrices.jpg
 [equ1]: ./misc_images/transform-single.png
 [equ2]: ./misc_images/transform-comb.png
 [equ3]: ./misc_images/angle_d.png
@@ -16,6 +18,7 @@
 [equ6]: ./misc_images/R_3_6.png
 [equ7]: ./misc_images/R_3_6_simpl.png
 [equ8]: ./misc_images/R_rpy.png
+[equ9]: ./misc_images/Individual_transform_form.jpg
 [schematic1]: ./misc_images/Theta1.png
 [schematic2]: ./misc_images/Theta2-3.png
 [schematic3]: ./misc_images/Theta3.png
@@ -86,10 +89,18 @@ dht = {alpha0: 	 0,   a0:  	 0,    d1:  d02,	q1: 	  q1,
 
 #### 2. Homogeneus transform matrix 
 
-With the DH parameters, we can calculate the individual homogeneous transform matrices for each joint.
-
-you can see the matrix used for each homogeneous transform on the image below.
+With the DH parameters, we can calculate the individual homogeneous transform matrices for each joint. implementing the data that we calculated in our DH table in the next matrix. 
 ![convine transform matrices][equ1]
+
+The matrix above is the homogeneous transform matrix which allows us to calculate rotation and translation from frame **_i-1_** to frame **_i_** .The matrix is made of two rotational matrices and two translational matrices as shown in the equation below:
+
+![individual_transform][equ9]
+
+to have a better idea of the result, we can check the rotational matrices below. 
+![Rotation_matrices][Matrix1]
+
+The Individual homogeneous transforms resultant is shown in the matrices below.
+![0_N_HT][Matrix2]
 
 ###### Code implementation:
 
