@@ -197,24 +197,18 @@ angle e can be calculated with the followed equation:
 
 #### 2. Calculating rotation matrix and theta 4 to 6
 Finally to solve the inverse orientation problem we need to find **θ4**, **θ5**, and **θ6**, by using the resultan rotation:
-![equ5][equ5]  .
+![equ5][equ5].
 
-With the R0_6 matrix given for the FK and the R_3 with the angles theta 1, 2, and 3 we can obtain the resultant matrix.
+With the R0_6 matrix given for the FK and the R_3 with the angles theta 1, 2, and 3 calculate theta 4-6. We can also multiply matrices R3_4, R4_5, and R5_6 obtaining R3_6 and the resultant matrix below.
+
 ![R3_6 matrix][Matrix3]
 
-First we calculate theta 5 from the matrix to obntain the resultan equations below.
+First we calculate theta 5 using arcta2 in r23 from the matrix, this will allow us to calculate theta 4 and 6 as shown below.
+
 ![theta4, 5, 6][equ10]
 
-```python
-# calculate rotation matrix from link o to 3 using theta 1, 2 and 3
-R0_3 = T0_3[0:3, 0:3] #extracting rotation propertis
-R0_3 = R0_3.evalf(subs={q1: theta1, q2: theta2, q3: theta3})
-```
 
-The matrix R3_6 is determined by decomposing the overall rotation matrix R0_6 = R0_3 * R3_6. Multiplying both sides by the inverse rotation R3_0 = inverse(R0_3) from the left gives:
-```python
-R3_6 = R0_3.inv("LU") * R0_G # Rotation matrix from link 3 to end effector
-```
+##### Code 
 
 ```python
 theta4 = atan2(R3_6[2,2], -R3_6[0,2])
@@ -225,18 +219,38 @@ theta6 = atan2(-R3_6[1,1], R3_6[1,0])
 
 And finally, it seems that the robot is picking and placing the samples. the Kuka arm did a good job in the simulation so far, but sometimes it pushes the samples instead of grabbing them. that means there is a lot of improvement that can be done for the kinematics calculations on this project.
 
-### Code implementation.
-1.  Fordward Kinematics (lines 29-151).
+### Code index.
 
-1.1. Setting up the kuka arm DH parameters (29-59).
-1.2. Function to create individual homogeneous transform (60-86)
-1.3. End effector rotation correction (85-105).
+- Forward Kinematics (lines 29-151).
+	
+	_'''
+	We start collecting the values from the URDF file to obtain ```an, dn, qn(theta), alpha``` to create the matrix ```dhl``` which is the DH parameters table.
+	'''_
+	- Setting up the kuka arm DH parameters (29-59).
+	- Function to create individual homogeneous transform (60-86)
+		
+		_'''Then we create a function with the formula shown in the **homogeneous transform section**'''_
+	- End effector error correction from URDF file (85-105).
+		
+		_'''This is a correction in z-axis and y-axis to compensate the difference between the Dh law and the information
+		given by the URDF file for the end effector'''_
+- Inverse Kinematics (119-182)
+	- Finding the wrist center ``WC`` (119-155)
+		
+		_''' We calculate the Wrist center by getting the arm data, correcting it with the rotation correction that we 				calculated before and subtracting the gripper offset from the wrist center to this value.'''_
+	- Calculating theta 1 to 3 (153-171)
+		
+		_''' We can find theta 2 and 3 applying cosine law to the section between join 2 and (164-166) in this section
+		we can see each side of the triangle produced ```side_a, side_b, side_c```'''_
+	- R3_6 rotation matrix (173-175)
+		
+		_'''implementation of the equation shown in the inverse quinematics sections'''_
+	- Calculating theta 4 to 6 (179-180)
+	
+	
+-------------------------------------------------------------------------------------------------------------
 
-2. Inverse Kinematics ()
-
-################################################################
-
-## Setting Up the Environment
+# Setting Up the Environment
 
 [![Udacity - Robotics NanoDegree Program](https://s3-us-west-1.amazonaws.com/udacity-robotics/Extra+Images/RoboND_flag.png)](https://www.udacity.com/robotics)
 # Robotic arm - Pick & Place project
