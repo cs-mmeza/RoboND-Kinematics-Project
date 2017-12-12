@@ -226,9 +226,14 @@ theta6 = atan2(-R3_6[1,1], R3_6[1,0])
 And finally, it seems that the robot is picking and placing the samples. the Kuka arm did a good job in the simulation so far, but sometimes it pushes the samples instead of grabbing them. that means there is a lot of improvement that can be done for the kinematics calculations on this project.
 
 ### Code implementation.
-1. (lines 29-151) Fordward Kinematics.
-1.1 (29-59) Setting up the kuka arm DH parameters)
-1.2 (60-86) function to create individual homogeneous
+1.  Fordward Kinematics (lines 29-151).
+
+1.1. Setting up the kuka arm DH parameters (29-59).
+1.2. Function to create individual homogeneous transform (60-86)
+1.3. End effector rotation correction (85-105).
+
+2. Inverse Kinematics ()
+
 ################################################################
 
 ## Setting Up the Environment
