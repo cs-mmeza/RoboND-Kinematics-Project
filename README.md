@@ -10,6 +10,7 @@
 [image7]: ./misc_images/dh_calculation.jpg
 [Matrix1]: ./misc_images/Rotation_axis.JPG
 [Matrix2]: ./misc_images/Individual_transform_matrices.JPG
+[Matrix3]: ./misc_images/R3_6.png
 [equ1]: ./misc_images/transform-single.png
 [equ2]: ./misc_images/transform-comb.png
 [equ3]: ./misc_images/angle_d.png
@@ -19,6 +20,7 @@
 [equ7]: ./misc_images/R_3_6_simpl.png
 [equ8]: ./misc_images/R_rpy.png
 [equ9]: ./misc_images/Individual_transform_form.JPG
+[equ10]: ./misc_images/Theta4-6.png
 [schematic1]: ./misc_images/Theta1.png
 [schematic2]: ./misc_images/Theta2-3.png
 [schematic3]: ./misc_images/Theta3.png
@@ -197,7 +199,11 @@ angle e can be calculated with the followed equation:
 Finally to solve the inverse orientation problem we need to find **θ4**, **θ5**, and **θ6**, by using the resultan rotation:
 ![equ5][equ5]  .
 
-Theta 4, 5 and 6 are the Euler Angles of the rotation R3_6. Thus our focus now is to calculate the rotation in that section.
+With the R0_6 matrix given for the FK and the R_3 with the angles theta 1, 2, and 3 we can obtain the resultant matrix.
+![R3_6 matrix][Matrix3]
+
+First we calculate theta 5 from the matrix to obntain the resultan equations below.
+![theta4, 5, 6][equ10]
 
 ```python
 # calculate rotation matrix from link o to 3 using theta 1, 2 and 3
@@ -210,14 +216,6 @@ The matrix R3_6 is determined by decomposing the overall rotation matrix R0_6 = 
 R3_6 = R0_3.inv("LU") * R0_G # Rotation matrix from link 3 to end effector
 ```
 
-Now we can calculate theta 4,5, and 6 by using the Euler angles for R3_6 as follows.
-
-theta4 = atan2( r32, r33),
-
-theta6 = atan2( r21, r11),
-
-theta5 = atan2(-r31, sqrt(r11**2 + r21**2)).
-
 ```python
 theta4 = atan2(R3_6[2,2], -R3_6[0,2])
 theta5 = atan2(sqrt(R3_6[0,2]*R3_6[0,2] + R3_6[2,2]*R3_6[2,2]), R3_6[1,2])
@@ -227,8 +225,10 @@ theta6 = atan2(-R3_6[1,1], R3_6[1,0])
 
 And finally, it seems that the robot is picking and placing the samples. the Kuka arm did a good job in the simulation so far, but sometimes it pushes the samples instead of grabbing them. that means there is a lot of improvement that can be done for the kinematics calculations on this project.
 
-
-
+### Code implementation.
+1. (lines 29-151) Fordward Kinematics.
+1.1 (29-59) Setting up the kuka arm DH parameters)
+1.2 (60-86) function to create individual homogeneous
 ################################################################
 
 ## Setting Up the Environment
@@ -240,6 +240,7 @@ Make sure you are using robo-nd VM or have Ubuntu+ROS installed locally.
 
 ### One time Gazebo setup step:
 Check the version of gazebo installed on your system using a terminal:
+
 ```sh
 $ gazebo --version
 ```
